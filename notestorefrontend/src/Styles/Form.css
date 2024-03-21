@@ -1,0 +1,67 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Protest+Riot&display=swap");
+
+.formbody {
+  background: rgb(238, 174, 202);
+  background: linear-gradient(
+    0deg,
+    rgba(238, 174, 202, 1) 0%,
+    rgba(148, 187, 233, 1) 100%
+  );
+  width: 25rem;
+  border-radius: 5px;
+  box-shadow: 0 0 10px 0 #00000041;
+  font-family: "JetBrains Mono", monospace;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+
+
+.formArea input {
+  font-family: "JetBrains Mono", monospace;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+.formArea textarea {
+  font-family: "JetBrains Mono", monospace;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+.formArea button {
+  margin-top: 10px;
+  width: 20rem;
+  height: 2rem;
+  padding: 5px;
+  border-radius: 5px;
+  background: linear-gradient(to right, #6161fede, #7733a7dd);
+  background-size: 200% 100%;
+  background-position: right bottom;
+  transition: background-position 0.3s ease;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.active {
+  background-color: #9353c0a6;
+  color: black !important;
+  transition: background-color 1s ease;
+  border-radius: 5px;
+}
+
+.tabs a{
+  text-decoration: none;
+  color: black;
+  font-family: "JetBrains Mono", monospace;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+.containerClass{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90vh;
+}
