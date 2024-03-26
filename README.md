@@ -40,7 +40,7 @@ To set up Memory Vault on your local machine for deployments, follow these steps
     - Install dependencies: `npm install`
     - Run the frontend server: `npm start`
 
-For using this as a local device software you can only download setup file(Memory Vault Setup.exe) and run it.
+For using this as a local device software you can only download setup file([Memory Vault Setup.exe](https://bitbucket.org/sunit-importent-file/memory_vault_setup/src/main/) and run it.
 
 
 ## Contributing
