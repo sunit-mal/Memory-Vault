@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class NoteDTO {
+	private Long id;
 	private String title;
 	private String fullNote;
+	private String image;
 }

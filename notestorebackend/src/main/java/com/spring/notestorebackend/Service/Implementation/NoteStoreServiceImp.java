@@ -10,6 +10,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import org.springframework.web.multipart.MultipartFile;
 import com.spring.notestorebackend.DTO.NoteDTO;
 import com.spring.notestorebackend.Entity.NoteOverFlow;
 import com.spring.notestorebackend.Entity.NoteStore;
@@ -17,6 +22,7 @@ import com.spring.notestorebackend.Helper.ExceptionStore;
 import com.spring.notestorebackend.Repository.NoteOverflowRepo;
 import com.spring.notestorebackend.Repository.NoteStoreRepo;
 import com.spring.notestorebackend.Service.NoteStoreService;
+import org.springframework.util.StringUtils;
 
 @Service
 public class NoteStoreServiceImp implements NoteStoreService {
@@ -27,11 +33,23 @@ public class NoteStoreServiceImp implements NoteStoreService {
 	@Autowired
 	private ExceptionStore exceptionStore;
 
+	private final String UPLOAD_DIR = "./media";
+
 	@Override
-	public String saveText(String title, String fullNote) {
+	public String saveText(String title, String fullNote, MultipartFile image) {
 		try {
 			NoteStore initialEntity = new NoteStore();
 			initialEntity.setTitle(title);
+			if (image != null && !image.isEmpty()) {
+				String fileName = System.nanoTime() + "_" + StringUtils.cleanPath(image.getOriginalFilename());
+				Path uploadPath = Paths.get(UPLOAD_DIR);
+				if (!Files.exists(uploadPath)) {
+					Files.createDirectories(uploadPath);
+				}
+				Path filePath = uploadPath.resolve(fileName);
+				Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+				initialEntity.setImage("/media/" + fileName);
+			}
 			int noteLength = fullNote.length();
 			if (noteLength <= 255) {
 				initialEntity.setInitialNote(fullNote);
@@ -70,7 +88,11 @@ public class NoteStoreServiceImp implements NoteStoreService {
 			Page<NoteStore> noteStorePage = noteStoreRepo.findAllByOrderByInsertDateDesc(pageable);
 			List<NoteDTO> noteDTOList = noteStorePage.map(noteStore -> {
 				NoteDTO noteDTO = new NoteDTO();
+				noteDTO.setId(noteStore.getId());
 				noteDTO.setTitle(noteStore.getTitle());
+				if (noteStore.getImage() != null) {
+					noteDTO.setImage(noteStore.getImage());
+				}
 				if (noteOverflowRepo.existsByNoteStore(noteStore)) {
 					String initialNote = fetchSequentialText(noteStore.getId());
 					noteDTO.setFullNote(initialNote);
@@ -115,13 +137,14 @@ public class NoteStoreServiceImp implements NoteStoreService {
 	}
 
 	@Override
-	public String deleteNote(String title) {
+	public String deleteNote(Long id) {
 		try {
-			NoteStore noteStore = noteStoreRepo.findByTitle(title);
-			if (noteStore == null) {
+			java.util.Optional<NoteStore> noteStoreOpt = noteStoreRepo.findById(id);
+			if (noteStoreOpt.isEmpty()) {
 				exceptionStore.storeFile(NoteStoreServiceImp.class, "deleteNote", "No Data Found");
 				return "No Data Found";
 			}
+			NoteStore noteStore = noteStoreOpt.get();
 			noteOverflowRepo.deleteAllByNoteStore(noteStore);
 			noteStoreRepo.delete(noteStore);
 			return "Success";

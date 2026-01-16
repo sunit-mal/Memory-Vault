@@ -13,6 +13,9 @@ import InputGroupText from "react-bootstrap/esm/InputGroupText";
 import toast from "react-hot-toast";
 import { request } from "./Axios_helper";
 
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+
 function InputForm() {
   const [open, setOpen] = React.useState("command");
   const [commandData, setCommandData] = React.useState({
@@ -23,6 +26,26 @@ function InputForm() {
     title: "",
     fullNote: "",
   });
+  const [image, setImage] = React.useState(null);
+
+  const [lang, setLang] = React.useState([]);
+  const [isLanguageFocused, setIsLanguageFocused] = React.useState(false);
+  const [filteredLang, setFilteredLang] = React.useState([]);
+
+  React.useEffect(() => {
+    request(
+      "GET",
+      "/command/get-lang",
+      "application/json",
+      {},
+      "application/json"
+    ).then((response) => {
+      if (response.status === 200) {
+        setLang(response.data);
+        setFilteredLang(response.data);
+      }
+    });
+  }, []);
 
   const handleCommandChange = (e) => {
     const { name, value } = e.target;
@@ -32,6 +55,18 @@ function InputForm() {
         [name]: value,
       };
     });
+    if (name === "language") {
+      const filtered = lang.filter((l) =>
+        l.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredLang(filtered);
+      setIsLanguageFocused(true);
+    }
+  };
+
+  const selectLanguage = (val) => {
+    setCommandData((prev) => ({ ...prev, language: val }));
+    setIsLanguageFocused(false);
   };
 
   const handleNoteChange = (e) => {
@@ -42,6 +77,19 @@ function InputForm() {
         [name]: value,
       };
     });
+  };
+
+  const handleQuillChange = (value) => {
+    setNoteData((prevData) => {
+      return {
+        ...prevData,
+        fullNote: value,
+      };
+    });
+  };
+
+  const handleImageChange = (e) => {
+    setImage(e.target.files[0]);
   };
 
   const commandSubmit = () => {
@@ -63,7 +111,10 @@ function InputForm() {
   };
 
   const noteSubmit = () => {
-    if (noteData.title && noteData.fullNote) {
+    // ReactQuill often returns "<p><br></p>" when empty, so we check for meaningful content
+    const isNoteEmpty = noteData.fullNote.replace(/<(.|\n)*?>/g, "").trim().length === 0;
+
+    if (noteData.title && !isNoteEmpty) {
       toast.promise(saveNote(), {
         loading: "Saving...",
         success: <b>Settings saved!</b>,
@@ -96,6 +147,18 @@ function InputForm() {
               language: "",
               command: "",
             });
+            // Re-fetch languages in case a new one was added
+            request(
+              "GET",
+              "/command/get-lang",
+              "application/json",
+              {},
+              "application/json"
+            ).then((response) => {
+              if (response.status === 200) {
+                setLang(response.data);
+              }
+            });
           } else {
             reject();
           }
@@ -108,11 +171,18 @@ function InputForm() {
 
   const saveNote = () => {
     return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append("title", noteData.title);
+      formData.append("fullNote", noteData.fullNote);
+      if (image) {
+        formData.append("image", image);
+      }
+
       request(
         "POST",
         "/note/save",
-        "application/json",
-        noteData,
+        "multipart/form-data", // Will be ignored by modified helper for FormData
+        formData,
         "application/json"
       )
         .then((response) => {
@@ -122,6 +192,7 @@ function InputForm() {
               title: "",
               fullNote: "",
             });
+            setImage(null);
           } else {
             reject();
           }
@@ -154,20 +225,74 @@ function InputForm() {
             </Nav>
           </CardHeader>
           <Card.Body>
-            <Form className="formArea">
+            <Form className="formArea" onSubmit={(e) => e.preventDefault()}>
               {open === "command" ? (
                 <Container>
-                  <footer className="blockquote-footer">Command Store</footer>
-                  <InputGroup className="mb-3">
-                    <InputGroupText>Language</InputGroupText>
-                    <br />
-                    <Form.Control
-                      type="text"
-                      name="language"
-                      value={commandData.language}
-                      onChange={handleCommandChange}
-                    />
-                  </InputGroup>
+                  <footer className="blockquote-footer" style={{ color: 'var(--text-muted)' }}>Command Store</footer>
+                  <div className="custom-search-container mb-3">
+                    <InputGroup>
+                      <InputGroupText>Language</InputGroupText>
+                      <Form.Control
+                        type="text"
+                        name="language"
+                        autoComplete="off"
+                        value={commandData.language}
+                        onChange={handleCommandChange}
+                        onFocus={() => setIsLanguageFocused(true)}
+                        onBlur={() => setTimeout(() => setIsLanguageFocused(false), 200)}
+                        placeholder="Search or type language..."
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            commandSubmit();
+                          }
+                        }}
+                      />
+                    </InputGroup>
+                    {isLanguageFocused && (
+                      <div className="search-results-list shadow">
+                        {filteredLang.map((l, index) => {
+                          const highlightMatch = (text, query) => {
+                            if (!query) return text;
+                            const parts = text.split(new RegExp(`(${query})`, 'gi'));
+                            return (
+                              <span>
+                                {parts.map((part, i) =>
+                                  part.toLowerCase() === query.toLowerCase() ? (
+                                    <span key={i} className="highlighted-text">{part}</span>
+                                  ) : part
+                                )}
+                              </span>
+                            );
+                          };
+
+                          return (
+                            <div
+                              key={index}
+                              className="search-result-item"
+                              onClick={() => selectLanguage(l)}
+                            >
+                              {highlightMatch(l, commandData.language)}
+                            </div>
+                          );
+                        })}
+                        {commandData.language && !lang.includes(commandData.language) && (
+                          <div
+                            className="search-result-item add-new"
+                            onClick={() => selectLanguage(commandData.language)}
+                          >
+                            <span>+ Create new: </span>
+                            <strong>{commandData.language}</strong>
+                          </div>
+                        )}
+                        {filteredLang.length === 0 && !commandData.language && (
+                          <div className="search-result-item text-muted small">
+                            Start typing to see languages...
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <InputGroup className="mb-3">
                     <InputGroupText>Command</InputGroupText>
                     <br />
@@ -176,10 +301,16 @@ function InputForm() {
                       name="command"
                       value={commandData.command}
                       onChange={handleCommandChange}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          commandSubmit();
+                        }
+                      }}
                     />
                   </InputGroup>
                   <InputGroup className="mb-3">
-                    <Button variant="primary" onClick={commandSubmit}>
+                    <Button type="button" variant="primary" onClick={commandSubmit}>
                       Submit
                     </Button>
                   </InputGroup>
@@ -195,28 +326,38 @@ function InputForm() {
                       name="title"
                       value={noteData.title}
                       onChange={handleNoteChange}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          noteSubmit();
+                        }
+                      }}
                     />
                   </InputGroup>
-                  <InputGroup className="mb-3">
-                    <InputGroupText>Note</InputGroupText>
-                    <br />
-                    <Form.Control
-                      as="textarea"
-                      aria-label="With textarea"
-                      name="fullNote"
+                  <div className="mb-3">
+                    <Form.Label className="fw-bold" style={{ color: "#495057" }}>Note</Form.Label>
+                    <ReactQuill
+                      theme="snow"
                       value={noteData.fullNote}
-                      onChange={handleNoteChange}
+                      onChange={handleQuillChange}
+                      style={{ height: "200px", marginBottom: "50px" }} // Keeping margin to accommodate toolbar if needed, though clean CSS handles it better.
                     />
-                  </InputGroup>
+                  </div>
+                  <div className="mb-3">
+                    <Form.Label className="fw-bold" style={{ color: "#495057" }}>Upload Image</Form.Label>
+                    <Form.Control type="file" onChange={handleImageChange} accept="image/*" />
+                  </div>
                   <InputGroup className="mb-3">
-                    <Button variant="primary" onClick={noteSubmit}>Submit</Button>
+                    <Button type="button" variant="primary" onClick={noteSubmit}>
+                      Submit
+                    </Button>
                   </InputGroup>
                 </Container>
               )}
             </Form>
           </Card.Body>
         </Card>
-      </Container>
+      </Container >
     </>
   );
 }

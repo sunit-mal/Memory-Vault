@@ -34,4 +34,7 @@ public class NoteStore {
 	@CreationTimestamp
 	@Column
 	private Date insertDate;
+
+	@Column(length = 1000)
+	private String image;
 }

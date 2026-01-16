@@ -12,10 +12,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.spring.notestorebackend.DTO.CommadDto;
-import com.spring.notestorebackend.DTO.NoteDTO;
 import com.spring.notestorebackend.Service.CommandStoreService;
 import com.spring.notestorebackend.Service.NoteStoreService;
 
@@ -30,8 +31,10 @@ public class StoreController {
 	private CommandStoreService commandStoreService;
 
 	@PostMapping("/note/save")
-	public ResponseEntity<Object> saveText(@RequestBody NoteDTO requestDTO) {
-		String response = noteStoreService.saveText(requestDTO.getTitle(), requestDTO.getFullNote());
+	public ResponseEntity<Object> saveText(@RequestParam("title") String title,
+			@RequestParam("fullNote") String fullNote,
+			@RequestParam(value = "image", required = false) MultipartFile image) {
+		String response = noteStoreService.saveText(title, fullNote, image);
 		if (response == null) {
 			return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -42,8 +45,8 @@ public class StoreController {
 	}
 
 	@GetMapping("/note/fetch/{size}/{pageIndex}")
-	public ResponseEntity<Object> fetchNotes(@PathVariable(name = "pageIndex") int pageIndex,
-			@PathVariable(name = "size") int size) {
+	public ResponseEntity<Object> fetchNotes(@PathVariable int pageIndex,
+			@PathVariable int size) {
 		Map<String, Object> response = noteStoreService.fetchNote(pageIndex, size);
 		if (response == null) {
 			return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -53,11 +56,11 @@ public class StoreController {
 		}
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-	
+
 	@Transactional
-	@DeleteMapping("/note/delete/{requestDTO}")
-	public ResponseEntity<Object> deleteText(@PathVariable(name = "requestDTO") String requestDTO) {
-		String respose = noteStoreService.deleteNote(requestDTO);
+	@DeleteMapping("/note/delete/{id}")
+	public ResponseEntity<Object> deleteText(@PathVariable Long id) {
+		String respose = noteStoreService.deleteNote(id);
 		if (respose == null) {
 			return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -66,7 +69,7 @@ public class StoreController {
 		}
 		return new ResponseEntity<>(respose, HttpStatus.BAD_REQUEST);
 	}
-	
+
 	@GetMapping("/command/fetch/{size}/{pageIndex}")
 	public ResponseEntity<Object> fetchCommands(@PathVariable(name = "pageIndex") int pageIndex,
 			@PathVariable(name = "size") int size) {
@@ -79,7 +82,7 @@ public class StoreController {
 		}
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-	
+
 	@GetMapping("/command/fetch-by-lang/{size}/{pageIndex}/{lang}")
 	public ResponseEntity<Object> fetchCommandsByLang(@PathVariable(name = "pageIndex") int pageIndex,
 			@PathVariable(name = "size") int size, @PathVariable(name = "lang") String lang) {
@@ -92,7 +95,7 @@ public class StoreController {
 		}
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-	
+
 	@PostMapping("/command/save")
 	public ResponseEntity<Object> saveCommand(@RequestBody CommadDto requestDTO) {
 		String response = commandStoreService.storeCommad(requestDTO);
@@ -104,7 +107,7 @@ public class StoreController {
 		}
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
-	
+
 	@Transactional
 	@DeleteMapping("/command/delete/{id}")
 	public ResponseEntity<Object> deleteCommand(@PathVariable(name = "id") Long id) {
@@ -117,7 +120,7 @@ public class StoreController {
 		}
 		return new ResponseEntity<>(respose, HttpStatus.BAD_REQUEST);
 	}
-	
+
 	@GetMapping("/command/get-lang")
 	public ResponseEntity<Object> getLang() {
 		Set<String> response = commandStoreService.fetAllLanguage();
@@ -129,5 +132,5 @@ public class StoreController {
 		}
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-	
+
 }

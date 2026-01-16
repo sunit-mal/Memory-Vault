@@ -1,0 +1,58 @@
+/* Custom Modal Glassmorphism Effect */
+.custom-modal-content {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25) !important;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.custom-modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    color: #333;
+}
+
+.custom-modal-body {
+    padding: 2rem !important;
+    font-size: 1.1rem;
+    color: #444;
+}
+
+.custom-modal-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
+    padding: 1.25rem !important;
+}
+
+.btn-cancel {
+    background: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
+    color: #495057 !important;
+    border-radius: 10px !important;
+    padding: 0.6rem 1.5rem !important;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+    background: #e2e6ea !important;
+}
+
+.btn-confirm {
+    background: linear-gradient(135deg, #ff416c, #ff4b2b) !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 10px !important;
+    padding: 0.6rem 1.5rem !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3) !important;
+}
+
+.btn-confirm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4) !important;
+}
+
+/* Modal close button color */
+.custom-modal-header .btn-close {
+    filter: invert(0.5);
+}

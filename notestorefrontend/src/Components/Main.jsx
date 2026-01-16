@@ -12,8 +12,31 @@ import { Toaster } from "react-hot-toast";
 import LanguageBaseCommand from "./LanguageBaseCommand";
 
 function Main() {
+  const [theme, setTheme] = React.useState(localStorage.getItem("theme") || "light");
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  };
+
   return (
     <>
+      <div className="bg-animation-container">
+        <div className="blob blob-1"></div>
+        <div className="blob blob-2"></div>
+        <div className="blob blob-3"></div>
+      </div>
+
+      {/* Interactive Hanging Bulb Theme Toggle */}
+      <div className="bulb-container" onClick={toggleTheme} title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}>
+        <div className="bulb-cord"></div>
+        <div className="bulb-main"></div>
+      </div>
+
       <Router>
         <SideNav />
         <Routes>
