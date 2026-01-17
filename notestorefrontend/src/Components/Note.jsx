@@ -1,7 +1,8 @@
 import React from "react";
 import { request } from "./Axios_helper";
 import { Pagination, Accordion, Card, Container } from "react-bootstrap";
-import { FaCopy, FaTrash, FaChevronDown } from "react-icons/fa";
+
+import { FaCopy, FaTrash, FaChevronDown, FaSync } from "react-icons/fa";
 import toast from "react-hot-toast";
 import CustomModal from "./CustomModal";
 
@@ -11,25 +12,47 @@ function Note() {
   const [pageNo, setPageNo] = React.useState(0);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [noteToDelete, setNoteToDelete] = React.useState(null);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
-  React.useEffect(() => {
+  const fetchData = (pageNum = 0, isRefresh = false) => {
+    if (isRefresh) setIsRefreshing(true);
+
     request(
       "GET",
-      "/note/fetch/5/" + pageNo,
+      "/note/fetch/5/" + pageNum,
       "application/json",
       {},
       "application/json"
     ).then((response) => {
+
       if (response.status === 200) {
-        if (pageNo === 0) {
+        if (pageNum === 0) {
           setContent(response.data.Content);
         } else {
           setContent((prev) => [...prev, ...response.data.Content]);
         }
         setPage(response.data.pagination);
+
+        if (isRefresh) {
+          setTimeout(() => {
+            setIsRefreshing(false);
+            toast.success("Notes refreshed!");
+          }, 500);
+        }
+      } else {
+        if (isRefresh) setIsRefreshing(false);
       }
     });
+  };
+
+  React.useEffect(() => {
+    fetchData(pageNo);
   }, [pageNo]);
+
+  const handleRefresh = () => {
+    setPageNo(0);
+    fetchData(0, true);
+  };
 
   const handleLoadMore = () => {
     if (page && page.pageIndex < page.totalPages - 1) {
@@ -80,8 +103,19 @@ function Note() {
   return (
     <Container className="py-4">
       <Card className="formbody mx-auto" style={{ maxWidth: "900px" }}>
+
         <Card.Header className="formheader">
-          <h2 className="text-center my-3">Notes</h2>
+          <div className="header-container">
+            <h2 className="text-center my-3">Notes</h2>
+            <button
+              className={`btn-refresh ${isRefreshing ? 'refreshing' : ''}`}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              title="Refresh notes"
+            >
+              <FaSync />
+            </button>
+          </div>
         </Card.Header>
         <Card.Body>
           <CustomModal

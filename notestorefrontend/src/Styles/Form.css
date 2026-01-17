@@ -685,7 +685,57 @@ body {
 }
 
 
+/* Modern Refresh Button */
+.btn-refresh {
+  background: var(--nav-link-bg) !important;
+  color: #6c63ff !important;
+  border: 1px solid var(--header-border) !important;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
 
+.btn-refresh:hover {
+  transform: translateY(-50%) rotate(180deg) scale(1.1);
+  background: linear-gradient(135deg, #6c63ff 0%, #4641ff 100%) !important;
+  color: white !important;
+  box-shadow: 0 8px 20px rgba(108, 99, 255, 0.4);
+  border-color: transparent !important;
+}
 
+.btn-refresh:active {
+  transform: translateY(-50%) scale(0.9);
+}
 
+.btn-refresh svg {
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
 
+.btn-refresh.refreshing svg {
+  animation: spinFresh 1s linear infinite;
+}
+
+@keyframes spinFresh {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.header-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

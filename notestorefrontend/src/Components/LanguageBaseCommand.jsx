@@ -2,7 +2,8 @@ import React from "react";
 import { request } from "./Axios_helper";
 import { Pagination, Dropdown, Container, Card } from "react-bootstrap";
 import "../Styles/home.css";
-import { FaCopy, FaTrash, FaChevronDown } from "react-icons/fa";
+
+import { FaCopy, FaTrash, FaChevronDown, FaSync } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { setCatchMemory } from "./catchMemory";
@@ -18,28 +19,52 @@ function LanguageBaseCommand() {
   const [lang, setLang] = React.useState([]);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState(null);
-  React.useEffect(() => {
-    setPageNo(0);
-  }, [filterLang]);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
-  React.useEffect(() => {
+  const fetchData = (pageNum = 0, isRefresh = false) => {
+    if (isRefresh) setIsRefreshing(true);
+
     request(
       "GET",
-      `/command/fetch-by-lang/5/${pageNo}/${filterLang}`,
+      `/command/fetch-by-lang/5/${pageNum}/${filterLang}`,
       "application/json",
       {},
       "application/json"
     ).then((response) => {
+
       if (response.status === 200) {
-        if (pageNo === 0) {
+        if (pageNum === 0) {
           setContent(response.data.Content);
         } else {
           setContent((prev) => [...prev, ...response.data.Content]);
         }
         setPage(response.data.pagination);
+
+        if (isRefresh) {
+          setTimeout(() => {
+            setIsRefreshing(false);
+            toast.success("Content refreshed!");
+          }, 500);
+        }
+      } else {
+        if (isRefresh) setIsRefreshing(false);
       }
     });
+  };
+
+  React.useEffect(() => {
+    setPageNo(0);
+  }, [filterLang]);
+
+  React.useEffect(() => {
+    fetchData(pageNo);
   }, [pageNo, filterLang]);
+
+  const handleRefresh = () => {
+    setPageNo(0);
+    fetchData(0, true);
+    fetchLanguages();
+  };
 
   const handleLoadMore = () => {
     if (page && page.pageIndex < page.totalPages - 1) {
@@ -47,7 +72,7 @@ function LanguageBaseCommand() {
     }
   };
 
-  React.useEffect(() => {
+  const fetchLanguages = () => {
     request(
       "GET",
       "/command/get-lang",
@@ -56,10 +81,13 @@ function LanguageBaseCommand() {
       "application/json"
     ).then((response) => {
       if (response.status === 200) {
-        console.log(response.data);
         setLang(response.data);
       }
     });
+  };
+
+  React.useEffect(() => {
+    fetchLanguages();
   }, []);
 
 
@@ -124,8 +152,19 @@ function LanguageBaseCommand() {
   return (
     <Container className="py-4">
       <Card className="formbody mx-auto" style={{ maxWidth: "900px" }}>
+
         <Card.Header className="formheader">
-          <h2 className="text-center my-3">Commands - {filterLang}</h2>
+          <div className="header-container">
+            <h2 className="text-center my-3">Commands - {filterLang}</h2>
+            <button
+              className={`btn-refresh ${isRefreshing ? 'refreshing' : ''}`}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              title="Refresh commands"
+            >
+              <FaSync />
+            </button>
+          </div>
         </Card.Header>
         <Card.Body>
           <div className="d-flex justify-content-between align-items-center mb-4">
